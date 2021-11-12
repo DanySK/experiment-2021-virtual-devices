@@ -1,11 +1,15 @@
 [versions]
-alchemist = "11.3.1"
+alchemist = "11.3.1-dev3u+98f896f97"
 kotlin = "1.5.31"
 
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
+alchemist-maps = { module = "it.unibo.alchemist:alchemist-maps", version.ref = "alchemist" }
 alchemist-protelis = { module = "it.unibo.alchemist:alchemist-incarnation-protelis", version.ref = "alchemist" }
 alchemist-scafi = { module = "it.unibo.alchemist:alchemist-incarnation-scafi", version.ref = "alchemist" }
+alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.ref = "alchemist" }
+graphhopper-core = { module = "com.graphhopper:graphhopper-core", version = "2.4" }
+quadtree = { module = "org.danilopianini:java-quadtree", version = "0.1.5" }
 
 [bundles]
 alchemist-protelis = [ "alchemist", "alchemist-protelis" ]

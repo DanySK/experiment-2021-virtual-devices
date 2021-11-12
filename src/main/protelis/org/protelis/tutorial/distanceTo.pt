@@ -1,10 +1,64 @@
 module org:protelis:tutorial:distanceTo
 
-let maxGrad = POSITIVE_INFINITY
-rep (d <- maxGrad) {
-	mux (env.has("source")) {
-		0
-	} else {
-		foldMin(maxGrad, nbr(d) + self.nbrRange())
+import protelis:coord:spreading
+import it.unibo.alchemist.Clone.genVD
+
+def randomTarget() {
+	let minLat = env.get("minLat")
+	let maxLat = env.get("maxLat")
+	let minLon = env.get("minLon")
+	let maxLon = env.get("maxLon")
+	let lat = (maxLat - minLat) * self.nextRandomDouble() + minLat
+	let lon = (maxLon - minLon) * self.nextRandomDouble() + minLon
+//	env.put("DEBUG: lat", lat)
+//	env.put("DEBUG: lon", lon)
+	let router = self.getEnvironmentAccess().getRoutingService()
+	let result = optionally(router.allowedPointClosestTo(self.getEnvironmentAccess().makePosition(lat, lon)))
+	env.put("target", result.orElse(self.getDevicePosition()))
+	result
+}
+
+def nbrRoute() = self.routingDistance(nbr(self.getDeviceUID()))
+
+def generateVD() = genVD(self.getEnvironmentAccess(), self.getDeviceUID(), self.getCurrentTime())
+
+let measured = distanceTo(env.has("center"))
+//let actual = self.routingDistance(0)
+//let error = if (env.has("virtual")) { 0 } else { abs(measured - actual) }
+let frame = 40
+let position = self.getDevicePosition()
+let now = self.getCurrentTime()
+let isReal = env.has("target") && !env.has("virtual")
+if (isReal) {
+	if (env.get("target") == [0, 0]) { randomTarget() };
+	rep (still <- [now, position]) {
+		let stillTime = still.get(0)
+		let stillPosition = still.get(1)
+		if (now - stillTime > frame) {
+			let isStill = position == stillPosition;
+			if (isStill) {
+				randomTarget()
+			}
+			[now, position]
+		} else {
+			[stillTime, stillPosition]
+		}
 	}
 }
+env.put("measured", measured)
+//env.put("actual", actual)
+//env.put("error", if (isFinite(error)) { error } else { actual })
+/*
+let routes = mux (isReal) { POSITIVE_INFINITY } else { nbrRoute() }
+env.putField("routes", routes)
+let distances = mux (isReal) { POSITIVE_INFINITY } else { self.nbrRange() }
+env.putField("distances", distances)
+let diffs = abs(routes - distances) / distances
+env.putField("diffs", diffs)
+let minDist = foldMin(POSITIVE_INFINITY, distances)
+env.put("minDist", minDist)
+*/
+if (isReal) {
+	generateVD()
+}
+measured

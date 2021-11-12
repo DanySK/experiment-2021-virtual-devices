@@ -1,27 +1,127 @@
 incarnation: protelis
 
+variables:
+  initial_longitude: &initial_longitude
+    formula: 12.613
+  initial_latitude: &initial_latitude
+    formula: 43.715
+  final_longitude: &final_longitude
+    formula: 12.663
+  final_latitude: &final_latitude
+    formula: 43.738
+  latitude_space: &latitude_space
+    formula: final_latitude - initial_latitude
+  longitude_space: &longitude_space
+    formula: final_longitude - initial_longitude
+  virtual_device_count: &virtual_device_count
+    type: GeometricVariable
+    parameters: [0, 1000, 5000, 5]
+  real_device_count: &real_device_count
+    type: GeometricVariable
+    parameters: [100, 100, 1000, 5]
+  seed: &seed
+    type: LinearVariable
+    parameters: [0, 0, 10, 1]
+  range: &range
+    formula: 75
+
+seeds:
+  scenario: *seed
+  simulation: *seed
+
+environment:
+  type: OSMEnvironment
+  parameters:
+    - urbino.pbf
+    - true
+    - true
+
 network-model:
   type: ConnectWithinDistance
-  parameters: [0.5]
+  parameters: [*range]
 
-_gradient: &gradient
-  - time-distribution: 1
-    # Writing Protelis programs within a YAML file is a bad experience
-    # (some characters need escaping, no syntax highlight, no code suggestions...)
-    # We recommend using the Protelis Eclipse plugin to write your code, then
-    # Loading the code as a module within Alchemist
-    # In order to run this example, make sure that src/main/protelis is part of
-    # your classpath (the Gradle script is already properly configured).
+_gradient: &program
+  - time-distribution: 0.5
     program: org:protelis:tutorial:distanceTo
   - program: send
 
-deployments:
-  type: Grid
-  parameters: [-5, -5, 5, 5, 0.25, 0.25, 0.1, 0.1]
+_move: &move
+  type: Event
+  time-distribution: 0.1
+  actions:
+    - type: TargetWalker
+      parameters: ["target", 1.4]
+
+_shared_content: &shared
+  - molecule: minLon
+    concentration: *initial_longitude
+  - molecule: maxLon
+    concentration: *final_longitude
+  - molecule: minLat
+    concentration: *initial_latitude
+  - molecule: maxLat
+    concentration: *final_latitude
+
+_virtual_devices: &virtual_devices
+  type: OnKeyMapPoints
+  parameters:
+    nodeCount: *virtual_device_count
+    range: *range
+    tolerance: 0.1
+    minLat: *initial_latitude
+    maxLat: *final_latitude
+    minLon: *initial_longitude
+    maxLon: *final_longitude
+    maxAttempts: 50
   contents:
-    - in:
-        type: Rectangle
-        parameters: [-6, -6, 2, 2]
-      molecule: source
-      concentration: true
-  programs: *gradient
+      shared: *shared
+      custom:
+        molecule: virtual
+        concentration: true
+  programs:
+    - *program
+
+_center_position: &center_position
+  [43.732424589973654, 12.631395030140707]
+
+_real_devices: &real_devices
+  type: Rectangle
+  parameters:
+    - *real_device_count
+    - *initial_latitude
+    - *initial_longitude
+    - *latitude_space
+    - *longitude_space
+  programs:
+    - *program
+    - *move
+  contents:
+    shared: *shared
+    custom:
+      - molecule: target
+        concentration: "[0, 0]"
+
+_center: &center
+  type: Rectangle
+  parameters:
+    - 1
+    - 43.721220
+    - 12.629973
+    - 0.008461256964405
+    - 0.009604276136993
+  programs: *program
+  contents:
+    shared: *shared
+    custom:
+      - molecule: center
+        concentration: true
+
+deployments:
+  - *center
+  - *real_devices
+  - *virtual_devices
+
+export:
+  - time
+  - type: NumberOfNodes
+  - type: VDError

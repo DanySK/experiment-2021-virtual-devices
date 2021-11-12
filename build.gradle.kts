@@ -39,9 +39,11 @@ multiJvm {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(libs.bundles.alchemist.protelis)
+    implementation(libs.alchemist.maps)
     if (!GraphicsEnvironment.isHeadless()) {
-        implementation("it.unibo.alchemist:alchemist-swingui:${libs.versions.alchemist.get()}")
+        implementation(libs.alchemist.swingui)
     }
+    implementation(libs.graphhopper.core)
 }
 
 // Heap size estimation for batches
@@ -85,13 +87,14 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
         fun basetask(name: String, additionalConfiguration: JavaExec.() -> Unit = {}) = tasks.register<JavaExec>(name) {
             group = alchemistGroup
             description = "Launches graphic simulation ${it.nameWithoutExtension}"
-            main = "it.unibo.alchemist.Alchemist"
+            mainClass.set("it.unibo.alchemist.Alchemist")
             classpath = sourceSets["main"].runtimeClasspath
             args("-y", it.absolutePath)
+            args("-e", "test.txt")
             if (System.getenv("CI") == "true") {
-                args("-hl", "-t", "2")
+                args("-hl", "-t", "3600")
             } else {
-                args("-g", "effects/${it.nameWithoutExtension}.aes")
+                args("-g", "effects/${it.nameWithoutExtension}.json")
             }
             javaLauncher.set(
                 javaToolchains.launcherFor {
