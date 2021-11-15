@@ -40,9 +40,9 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(libs.bundles.alchemist.protelis)
     implementation(libs.alchemist.maps)
-    if (!GraphicsEnvironment.isHeadless()) {
-        implementation(libs.alchemist.swingui)
-    }
+    implementation(libs.alchemist.ui.tooling)
+    implementation(libs.alchemist.swingui)
+    implementation(libs.alchemist.euclidean.geometry)
     implementation(libs.graphhopper.core)
 }
 
@@ -86,6 +86,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
     ?.forEach {
         fun basetask(name: String, additionalConfiguration: JavaExec.() -> Unit = {}) = tasks.register<JavaExec>(name) {
             group = alchemistGroup
+            systemProperty("sun.java2d.opengl", "false")
             description = "Launches graphic simulation ${it.nameWithoutExtension}"
             mainClass.set("it.unibo.alchemist.Alchemist")
             classpath = sourceSets["main"].runtimeClasspath
@@ -114,9 +115,9 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             args(
                 "-e", "data/${it.nameWithoutExtension}",
                 "-b",
-                "-var", "seed", "speed", "meanNeighbors", "nodeCount",
+                "-var", "seed", "realDeviceCount", "range", "rangeToVd",
                 "-p", threadCount,
-                "-i", 1
+                "-i", 2
             )
         }
         runAllBatch.dependsOn(batch)

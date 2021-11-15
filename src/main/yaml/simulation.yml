@@ -14,16 +14,23 @@ variables:
   longitude_space: &longitude_space
     formula: final_longitude - initial_longitude
   virtual_device_count: &virtual_device_count
+#    type: GeometricVariable
+#    parameters: [0, 1000, 5000, 5]
+    formula: 0
+  realDeviceCount: &real_device_count
     type: GeometricVariable
-    parameters: [0, 1000, 5000, 5]
-  real_device_count: &real_device_count
-    type: GeometricVariable
-    parameters: [100, 100, 1000, 5]
+    parameters: [500, 5, 500, 5]
   seed: &seed
     type: LinearVariable
     parameters: [0, 0, 10, 1]
   range: &range
-    formula: 75
+    type: ArbitraryVariable
+    parameters: [10, [10, 20, 50, 100, 200, 500, 1000, 2000]]
+  rangeToVd:
+    type: ArbitraryVariable
+    parameters: [0.25, [0.25, 0.5, 0.75, 1, 1.25, 1.5, .inf]]
+  vd-radius: &vd-radius
+    formula: range * rangeToVd
 
 seeds:
   scenario: *seed
@@ -47,7 +54,7 @@ _gradient: &program
 
 _move: &move
   type: Event
-  time-distribution: 0.1
+  time-distribution: 1
   actions:
     - type: TargetWalker
       parameters: ["target", 1.4]
@@ -98,6 +105,8 @@ _real_devices: &real_devices
   contents:
     shared: *shared
     custom:
+      - molecule: vd-radius
+        concentration: *vd-radius
       - molecule: target
         concentration: "[0, 0]"
 
@@ -124,4 +133,15 @@ deployments:
 export:
   - time
   - type: NumberOfNodes
+  - molecule: virtual
+    aggregators: sum
+    value-filter: onlyfinite
+  - molecule: commcost
+    aggregators: [sum, mean, stdev]
+    value-filter: onlyfinite
   - type: VDError
+
+terminate:
+  - type: AfterTime
+    parameters:
+      endTime: 3600

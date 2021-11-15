@@ -20,7 +20,7 @@ def randomTarget() {
 
 def nbrRoute() = self.routingDistance(nbr(self.getDeviceUID()))
 
-def generateVD() = genVD(self.getEnvironmentAccess(), self.getDeviceUID(), self.getCurrentTime())
+def generateVD() = genVD(self.getEnvironmentAccess(), self.getDeviceUID(), self.getCurrentTime(), env.get("vd-radius"))
 
 let measured = distanceTo(env.has("center"))
 //let actual = self.routingDistance(0)
@@ -30,6 +30,7 @@ let position = self.getDevicePosition()
 let now = self.getCurrentTime()
 let isReal = env.has("target") && !env.has("virtual")
 if (isReal) {
+	env.put("commcost", foldSum(0, nbr(1)));
 	if (env.get("target") == [0, 0]) { randomTarget() };
 	rep (still <- [now, position]) {
 		let stillTime = still.get(0)

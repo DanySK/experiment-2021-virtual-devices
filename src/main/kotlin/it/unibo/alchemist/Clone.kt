@@ -15,18 +15,16 @@ object Clone {
     val virtual = SimpleMolecule("virtual")
 
     @JvmStatic
-    fun genVD(environment: MapEnvironment<Boolean, *, *>, thisNode: Node<Boolean>, time: Double) {
+    fun genVD(environment: MapEnvironment<Boolean, *, *>, thisNode: Node<Boolean>, time: Double, radius: Any) {
         val position = environment.getPosition(thisNode)
         val neighs = environment.getNeighborhood(thisNode).filter { it.contains(virtual) }
-        val neighPositions by lazy { neighs.map { environment.getPosition(it) } }
         val distances by lazy { neighs.map { n -> environment.getPosition(n).let { it to it.distanceTo(position) } } }
-        val shouldGenerate = neighs.isEmpty() ||
-            distances.none { it.second < 40 }
-//                ||
-//            distances.none { (p, d) ->
-//                val route = environment.computeRoute(position, p).length()
-//                abs(route - d) / min(route, d) < 0.1
-//            }
+        val actualRadius = when(radius) {
+            is Number -> radius.toDouble()
+            is String -> radius.toDouble()
+            else -> throw IllegalArgumentException("Illegal radius '$radius' (${radius::class.simpleName})")
+        }
+        val shouldGenerate = actualRadius.isFinite() && (neighs.isEmpty() || distances.none { it.second < actualRadius })
         if (shouldGenerate) {
             environment.addNode(thisNode.cloneNode(DoubleTime(time)).also { node ->
                 node.setConcentration(SimpleMolecule("virtual"), true)

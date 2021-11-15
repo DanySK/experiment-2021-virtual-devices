@@ -6,11 +6,11 @@ import it.unibo.alchemist.model.interfaces.Node
 import it.unibo.alchemist.model.interfaces.Reaction
 import it.unibo.alchemist.model.interfaces.Time
 import org.apache.commons.math3.stat.descriptive.StorelessUnivariateStatistic
-import org.apache.commons.math3.stat.descriptive.UnivariateStatistic
 import org.apache.commons.math3.stat.descriptive.moment.Mean
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation
+import org.apache.commons.math3.stat.descriptive.rank.Max
+import org.apache.commons.math3.stat.descriptive.rank.Min
 import java.lang.IllegalStateException
-import java.util.Queue
 import kotlin.math.abs
 
 class VDError : Extractor {
@@ -48,10 +48,12 @@ class VDError : Extractor {
             disconnected.size.toDouble(),
             mean.evaluate(errors),
             stdev.evaluate(errors),
+            max.evaluate(errors),
+            min.evaluate(errors),
         )
     }
 
-    override fun getNames() = listOf("real", "disconnected", "error[mean]", "error[stdev]")
+    override fun getNames() = listOf("real", "disconnected", "error[mean]", "error[stdev]", "error[max]", "error[min]")
 
     companion object {
         private val error = SimpleMolecule("error")
@@ -60,13 +62,16 @@ class VDError : Extractor {
         private val measured = SimpleMolecule("measured")
         private val mean: StorelessUnivariateStatistic = Mean()
         private val stdev: StorelessUnivariateStatistic = StandardDeviation()
+        private val min: StorelessUnivariateStatistic = Min()
+        private val max: StorelessUnivariateStatistic = Max()
         private fun <T> Environment<T, *>.connectedNodes(center: Node<T>): Set<Node<T>> {
-            fun locallyConnected(node: Node<T>) = getNeighborhood(node).neighbors.toSet()
-            val toVisit = ArrayDeque(locallyConnected(center))
+            fun locallyConnected(node: Node<T>): Set<Node<T>> = getNeighborhood(node).neighbors.toSet()
+            val toVisit = locallyConnected(center).toMutableSet()
             val visited = mutableSetOf(center)
             val result = mutableSetOf(center)
             while (toVisit.isNotEmpty()) {
-                val subject = toVisit.removeFirst()
+                val subject = toVisit.first()
+                toVisit.remove(subject)
                 visited.add(subject)
                 toVisit.addAll(locallyConnected(subject) - visited)
                 result.add(subject)
