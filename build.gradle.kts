@@ -91,7 +91,6 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             mainClass.set("it.unibo.alchemist.Alchemist")
             classpath = sourceSets["main"].runtimeClasspath
             args("-y", it.absolutePath)
-            args("-e", "test.txt")
             if (System.getenv("CI") == "true") {
                 args("-hl", "-t", "3600")
             } else {
@@ -114,6 +113,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             File("data").mkdirs()
             args(
                 "-e", "data/${it.nameWithoutExtension}",
+                "-hl",
                 "-b",
                 "-var", "seed", "realDeviceCount", "range", "rangeToVd",
                 "-p", threadCount,
