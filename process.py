@@ -92,7 +92,7 @@ def extractCoordinates(filename):
         dataBegin = r"\d"
         is_float = r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
         for line in file:
-            match = re.findall(regex, line)
+            match = re.findall(regex, line.replace('Infinity', '1e30000'))
             if match:
                 return {
                     var : float(value) if re.match(is_float, value)
@@ -187,10 +187,10 @@ if __name__ == '__main__':
     experiments = ['simulation']
     floatPrecision = '{: 0.3f}'
     # Number of time samples 
-    timeSamples = 100
+    timeSamples = 200
     # time management
-    minTime = 0
-    maxTime = 50
+    minTime = 1
+    maxTime = 3600
     timeColumnName = 'time'
     logarithmicTime = False
     # One or more variables are considered random and "flattened"
@@ -268,13 +268,14 @@ if __name__ == '__main__':
             except:
                 shouldRecompute = True
         if shouldRecompute:
+            print('Recomputing')
             timefun = np.logspace if logarithmicTime else np.linspace
             means = {}
             stdevs = {}
             for experiment in experiments:
                 # Collect all files for the experiment of interest
                 import fnmatch
-                allfiles = filter(lambda file: fnmatch.fnmatch(file, experiment + '_*.txt'), os.listdir(directory))
+                allfiles = filter(lambda file: fnmatch.fnmatch(file, experiment + '_*'), os.listdir(directory))
                 allfiles = [directory + '/' + name for name in allfiles]
                 allfiles.sort()
                 # From the file name, extract the independent variables
