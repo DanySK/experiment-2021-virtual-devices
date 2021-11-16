@@ -68,7 +68,7 @@ def mergeDicts(d1, d2):
         res[k] = valueOrEmptySet(k, d1) | valueOrEmptySet(k, d2)
     return res
 
-def extractCoordinates(filename):
+def extractCoordinates(filename, round_variables):
     """
     Scans the header of an Alchemist file in search of the variables.
 
@@ -82,24 +82,29 @@ def extractCoordinates(filename):
     Returns
     -------
     dict
-        A dictionary whose keys are strings (coordinate name) and values are
-        lists (set of variable values)
-
+        A dictionary whose keys are strings (coordinate name)
+        and values are variable values for the experiment
     """
     with open(filename, 'r') as file:
 #        regex = re.compile(' (?P<varName>[a-zA-Z._-]+) = (?P<varValue>[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?),?')
-        regex = r"(?P<varName>[a-zA-Z._-]+) = (?P<varValue>[^,]*),?"
+        regex = r"(?P<varName>[a-zA-Z._-]+)\s*=\s*(?P<varValue>[^,]*),?"
         dataBegin = r"\d"
         is_float = r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
         for line in file:
             match = re.findall(regex, line.replace('Infinity', '1e30000'))
             if match:
-                return {
-                    var : float(value) if re.match(is_float, value)
-                        else bool(re.match(r".*?true.*?", value.lower())) if re.match(r".*?(true|false).*?", value.lower())
-                        else value
-                    for var, value in match
-                }
+                result = {}
+                for var, value in match:
+                    if re.match(is_float, value):
+                        if var in round_variables:
+                            result[var] = int(float(value))
+                        else:
+                            result[var] = float(value)
+                    elif re.match(r".*?(true|false).*?", value.lower()):
+                        result[var] = bool(re.match(r".*?true.*?", value.lower()))
+                    else:
+                        result[var] = value
+                return result
             elif re.match(dataBegin, line[0]):
                 return {}
 
@@ -195,6 +200,8 @@ if __name__ == '__main__':
     logarithmicTime = False
     # One or more variables are considered random and "flattened"
     seedVars = ['seed', 'longseed']
+    #
+    round_variables = ['realDeviceCount']
     # Label mapping
     class Measure:
         def __init__(self, description, unit = None):
@@ -239,6 +246,18 @@ if __name__ == '__main__':
         'msqer@harmonicCentrality[Mean]': Measure(f'${expected(mse(centrality_label))}$'),
         'msqer@harmonicCentrality[StandardDeviation]': Measure(f'${stdev_of(mse(centrality_label))}$'),
         'org:protelis:armonicCentralityHLL[Mean]': Measure(f'${expected(centrality_label)}$'),
+        'commcost[Sum]': Measure(r'Overall communication cost', r'$\frac{messages}{round}$'),
+        'rangeToVd': Measure(r'$\frac{r_c}{r_v}$'),
+        'realDeviceCount': Measure(r'$N_r$', 'devices'),
+        'range': Measure(r'$R$', '$m$'),
+        'disconnected': Measure(r'isolated devices', 'devices'),
+        'error[max]': Measure(r'maximum error', '$m$'),
+        'error[min]': Measure(r'minimum error', '$m$'),
+        'error[mean]': Measure(r'mean error', '$m$'),
+        'error[stdev]': Measure(f'${stdev_of("error")}$', '$m$'),
+        'nodes': Measure(f'$N$', 'devices'),
+        'real': Measure(f'$N_r$', 'devices'),
+        'virtual[Sum]': Measure(f'$N_v$', 'devices'),
     }
     def derivativeOrMeasure(variable_name):
         if variable_name.endswith('dt'):
@@ -281,7 +300,7 @@ if __name__ == '__main__':
                 # From the file name, extract the independent variables
                 dimensions = {}
                 for file in allfiles:
-                    dimensions = mergeDicts(dimensions, extractCoordinates(file))
+                    dimensions = mergeDicts(dimensions, extractCoordinates(file, round_variables))
                 dimensions = {k: sorted(v) for k, v in dimensions.items()}
                 # Add time to the independent variables
                 dimensions[timeColumnName] = range(0, timeSamples)
@@ -326,7 +345,7 @@ if __name__ == '__main__':
                         for idx, v in enumerate(varNames):
                             if v != timeColumnName:
                                 darray = dataset[v]
-                                experimentVars = extractCoordinates(file)
+                                experimentVars = extractCoordinates(file, round_variables)
                                 darray.loc[experimentVars] = data[:, idx].A1
                     # Fold the dataset along the seed variables, producing the mean and stdev datasets
                     mergingVariables = [seed for seed in seedVars if seed in dataset.coords]
