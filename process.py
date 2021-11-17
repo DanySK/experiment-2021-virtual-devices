@@ -396,7 +396,7 @@ if __name__ == '__main__':
                     beautified_value = beautifyValue(current_coordinate_value)
                     for current_metric in merge_data_view.data_vars:
                         title = f'{label_for(current_metric)} for diverse {label_for(comparison_variable)} when {label_for(current_coordinate)}={beautified_value}'
-                        for withErrors in [True, False]:
+                        for withErrors in [False]:
                             fig, ax = make_line_chart(
                                 title = title,
                                 xdata = merge_data_view[timeColumnName],
