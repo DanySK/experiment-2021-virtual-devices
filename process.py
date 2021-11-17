@@ -247,7 +247,7 @@ if __name__ == '__main__':
         'msqer@harmonicCentrality[StandardDeviation]': Measure(f'${stdev_of(mse(centrality_label))}$'),
         'org:protelis:armonicCentralityHLL[Mean]': Measure(f'${expected(centrality_label)}$'),
         'commcost[Sum]': Measure(r'Overall communication cost', r'$\frac{messages}{round}$'),
-        'rangeToVd': Measure(r'$\frac{r_c}{r_v}$'),
+        'rangeToVd': Measure(r'$\frac{R}{R_v}$'),
         'realDeviceCount': Measure(r'$N_r$', 'devices'),
         'range': Measure(r'$R$', '$m$'),
         'disconnected': Measure(r'isolated devices', 'devices'),
