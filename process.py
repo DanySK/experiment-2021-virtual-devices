@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 import xarray as xr
 import re
@@ -176,6 +177,10 @@ def beautifyValue(v):
         v = float(v)
         if v.is_integer():
             return int(v)
+        if v == float('inf'):
+            return '∞'
+        if v == float('-inf'):
+            return '-∞'
         return v
     except:
         return v
@@ -237,23 +242,15 @@ if __name__ == '__main__':
         return r'\|' + x + r'\|'
 
     labels = {
-        'nodeCount': Measure(r'$n$', 'nodes'),
-        'harmonicCentrality[Mean]': Measure(f'${expected("H(x)")}$'),
-        'meanNeighbors': Measure(f'${expected(cardinality("N"))}$', 'nodes'),
-        'speed': Measure(r'$\|\vec{v}\|$', r'$m/s$'),
-        'msqer@harmonicCentrality[Max]': Measure(r'$\max{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Min]': Measure(r'$\min{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Mean]': Measure(f'${expected(mse(centrality_label))}$'),
-        'msqer@harmonicCentrality[StandardDeviation]': Measure(f'${stdev_of(mse(centrality_label))}$'),
-        'org:protelis:armonicCentralityHLL[Mean]': Measure(f'${expected(centrality_label)}$'),
-        'commcost[Sum]': Measure(r'Overall communication cost', r'$\frac{messages}{round}$'),
-        'rangeToVd': Measure(r'$\frac{R}{R_v}$'),
+        'commcost[Sum]': Measure(r'Total comm. cost $\sum_{j \in N_r}{M_j}$', r'$\frac{messages}{round}$'),
+        'commcost[Mean]': Measure(r'Mean comm. cost $\overline{M}$', r'$\frac{messages}{round}$'),
+        'rangeToVd': Measure(r'$\frac{R_v}{R}$'),
         'realDeviceCount': Measure(r'$N_r$', 'devices'),
         'range': Measure(r'$R$', '$m$'),
         'disconnected': Measure(r'isolated devices', 'devices'),
         'error[max]': Measure(r'maximum error', '$m$'),
         'error[min]': Measure(r'minimum error', '$m$'),
-        'error[mean]': Measure(r'mean error', '$m$'),
+        'error[mean]': Measure(r'Mean distance error $\overline{\delta}$', '$m$'),
         'error[stdev]': Measure(f'${stdev_of("error")}$', '$m$'),
         'nodes': Measure(f'$N$', 'devices'),
         'real': Measure(f'$N_r$', 'devices'),
