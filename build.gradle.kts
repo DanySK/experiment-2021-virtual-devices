@@ -92,7 +92,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             classpath = sourceSets["main"].runtimeClasspath
             args("-y", it.absolutePath)
             if (System.getenv("CI") == "true") {
-                args("-hl", "-t", "3600")
+                args("-hl", "-t", "5")
             } else {
                 args("-g", "effects/${it.nameWithoutExtension}.json")
             }
