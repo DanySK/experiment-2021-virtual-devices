@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 import xarray as xr
 import re
@@ -176,6 +177,10 @@ def beautifyValue(v):
         v = float(v)
         if v.is_integer():
             return int(v)
+        if v == float('inf'):
+            return '∞'
+        if v == float('-inf'):
+            return '-∞'
         return v
     except:
         return v
@@ -237,27 +242,20 @@ if __name__ == '__main__':
         return r'\|' + x + r'\|'
 
     labels = {
-        'nodeCount': Measure(r'$n$', 'nodes'),
-        'harmonicCentrality[Mean]': Measure(f'${expected("H(x)")}$'),
-        'meanNeighbors': Measure(f'${expected(cardinality("N"))}$', 'nodes'),
-        'speed': Measure(r'$\|\vec{v}\|$', r'$m/s$'),
-        'msqer@harmonicCentrality[Max]': Measure(r'$\max{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Min]': Measure(r'$\min{(' + mse(centrality_label) + ')}$'),
-        'msqer@harmonicCentrality[Mean]': Measure(f'${expected(mse(centrality_label))}$'),
-        'msqer@harmonicCentrality[StandardDeviation]': Measure(f'${stdev_of(mse(centrality_label))}$'),
-        'org:protelis:armonicCentralityHLL[Mean]': Measure(f'${expected(centrality_label)}$'),
-        'commcost[Sum]': Measure(r'Overall communication cost', r'$\frac{messages}{round}$'),
-        'rangeToVd': Measure(r'$\frac{R}{R_v}$'),
+        'commcost[Sum]': Measure(r'Total comm. cost $\sum_{j \in N_r}{M_j}$', r'$\frac{messages}{round}$'),
+        'commcost[Mean]': Measure(r'Mean comm. cost $\overline{M}$', r'$\frac{messages}{round}$'),
+        'rangeToVd': Measure(r'$\frac{R_v}{R}$'),
         'realDeviceCount': Measure(r'$N_r$', 'devices'),
         'range': Measure(r'$R$', '$m$'),
         'disconnected': Measure(r'isolated devices', 'devices'),
         'error[max]': Measure(r'maximum error', '$m$'),
         'error[min]': Measure(r'minimum error', '$m$'),
-        'error[mean]': Measure(r'mean error', '$m$'),
+        'error[mean]': Measure(r'Mean distance error $\overline{\delta}$', '$m$'),
         'error[stdev]': Measure(f'${stdev_of("error")}$', '$m$'),
         'nodes': Measure(f'$N$', 'devices'),
         'real': Measure(f'$N_r$', 'devices'),
         'virtual[Sum]': Measure(f'$N_v$', 'devices'),
+        'time': Measure('time', 's'),
     }
     def derivativeOrMeasure(variable_name):
         if variable_name.endswith('dt'):
@@ -366,13 +364,13 @@ if __name__ == '__main__':
     import matplotlib.cm as cmx
     matplotlib.rcParams.update({'axes.titlesize': 12})
     matplotlib.rcParams.update({'axes.labelsize': 10})
+
     def make_line_chart(xdata, ydata, title = None, ylabel = None, xlabel = None, colors = None, linewidth = 1, errlinewidth = 0.5, figure_size = (6, 4)):
         fig = plt.figure(figsize = figure_size)
         ax = fig.add_subplot(1, 1, 1)
         ax.set_title(title)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
-#        ax.set_ylim(0)
 #        ax.set_xlim(min(xdata), max(xdata))
         index = 0
         for (label, (data, error)) in ydata.items():
@@ -384,6 +382,7 @@ if __name__ == '__main__':
                 ax.plot(xdata, data+error, label=None, color=last_color, linewidth=errlinewidth)
                 ax.plot(xdata, data-error, label=None, color=last_color, linewidth=errlinewidth)
         return (fig, ax)
+
     def generate_all_charts(means, errors = None, basedir=''):
         viable_coords = { coord for coord in means.coords if means[coord].size > 1 }
         for comparison_variable in viable_coords - {timeColumnName}:
@@ -421,9 +420,40 @@ if __name__ == '__main__':
                                 figname = figname.replace(symbol, '_')
                             fig.savefig(f'{by_time_output_directory}/{figname}.pdf')
                             plt.close(fig)
+
     for experiment in experiments:
         current_experiment_means = means[experiment]
         current_experiment_errors = stdevs[experiment]
         generate_all_charts(current_experiment_means, current_experiment_errors, basedir = f'{experiment}/all')
-        
+        for range in current_experiment_means['range'].values:
+            for nodes in current_experiment_means['realDeviceCount'].values:
+                comparison_variable = 'rangeToVd'
+                data = current_experiment_means.sel(range = range, realDeviceCount = nodes)
+                beautified_value = beautifyValue(comparison_variable)
+                for current_metric in data.data_vars:
+                    title = f'{label_for(current_metric)} when {label_for("range")}={beautifyValue(range)} and {label_for("realDeviceCount")}={beautifyValue(nodes)}'
+                    fig, ax = make_line_chart(
+                        title = title,
+                        xdata = data['time'],
+                        xlabel = unit_for('time'),
+                        ylabel = unit_for(current_metric),
+                        ydata = {
+                            beautifyValue(label): (data.sel({comparison_variable: label})[current_metric], 0)
+                            for label in data[comparison_variable].values
+                        },
+                    )
+                    ax.set_xlim(minTime, maxTime)
+#                    maxy = max(data[current_metric].values.flatten()) * 1.05
+                    ax.set_ylim(0, None)
+                    ax.legend(title = label_for(comparison_variable), ncol = 2)
+                    fig.tight_layout()
+                    by_time_output_directory = f'{output_directory}/rangeToVd/'
+                    Path(by_time_output_directory).mkdir(parents=True, exist_ok=True)
+                    figname = f'{current_metric}-range-{beautifyValue(range)}_nodes-{nodes}'
+                    for symbol in r".[]\/@:":
+                        figname = figname.replace(symbol, '_')
+                    fig.savefig(f'{by_time_output_directory}/{figname}.pdf')
+                    plt.close(fig)
+            
+
 # Custom charting
