@@ -1,13 +1,8 @@
-# Alchemist Primer
-
-This is a template project to spawn projects using the [Alchemist Simulator](https://github.com/AlchemistSimulator/Alchemist).
-It provides a pre-configured gradle build.
-
-This project is a quick start for the [Alchemist](https://github.com/AlchemistSimulator/Alchemist) simulator, it shows how to use the simulator via [Gradle](https://gradle.org) to run a simple simulation. More information can be found on [the official Alchemist website](https://alchemistsimulator.github.io).
+# Digital Twins, Virtual Devices, and Augmentations for Self-Organising Cyber-Physical Collectives
 
 ## Prerequisites
 
-Alchemist's prerequisites can be found [here](https://alchemistsimulator.github.io/wiki/usage/installation/).
+A working version of Java, the supported version range is 8 to 17, and a working version of Python 3, including `pip`.
 
 ## How to launch
 
@@ -22,41 +17,39 @@ For each YAML file in `src/main/yaml` a task `runFileName` will be created.
 
 In order to launch, open a terminal and move to the project root folder, then on UNIX:
 ```bash
-./gradlew runAlchemist
+./gradlew runSimulation
 ```
 On Windows:
 ```
-gradlew.bat runAlchemist
+gradlew.bat runSimulation
 ```
 
 Press <kb>P</kb> to start the simulation.
-For further information about the gui, see the [graphical interface shortcuts](https://alchemistsimulator.github.io/wiki/usage/gui/).
+For further information about the GUI, see the [graphical interface shortcuts](https://alchemistsimulator.github.io/wiki/usage/gui/).
 
 Note that the first launch will be rather slow, since Gradle will download all the required files.
 They will get cached in the user's home folder (as per Gradle normal behavior).
 
-## Command line interface
+## Re-generating all the data
 
-The CLI supports the following options
+The experiment is entirely reproducible.
+Regenerating all the data may take *weeks* on a well-equipped 2021 personal computer.
+The process is CPU-intensive and we do not recommend running it on devices where heat can be damaging to the battery.
 
-| Option                                     | Effect                                                                                                                                                                            |
-|--------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| -b,--batch                                 | Runs in batch mode. If one or more -var parameters are specified, multiple simulation runs will be executed in parallel with all the combinations of values.                      |
-| -bmk,--benchmark \<file>                    | Performs a benchmark with the provided simulation, measuring the total execution time. Saves result in given file.                                                                |
-| -cc,--comment-char                         | Sets the char that will be used to mark a data file line as commented. Defaults to #. (To be implemented)                                                                         |
-| -d,--distributed \<file>                    | Distribute simulations in computer grid                                                                                                                                           |
-| -e,--export \<file>                         | Exports the results onto a file                                                                                                                                                   |
-| -g,--effect-stack \<file>                   | Loads an effect stack from file. Does nothing if in headless mode (because --batch and/or --headless are enabled)                                                                 |
-| -h,--help                                  | Print this help and quits the program                                                                                                                                             |
-| -hl,--headless                             | Disable the graphical interface (automatic in batch mode)                                                                                                                         |
-| -i,--interval \<interval>                   | Used when exporting data. Specifies how much simulated time units should pass between two samplings. Defaults to 1.                                                               |
-| -p,--parallelism \<arg>                     | Sets how many threads will be used in batch mode (default to the number of cores of your CPU).                                                                                    |
-| -q,--quiet                                 | Quiet mode: print only error-level informations.                                                                                                                                  |
-| -qq,--quiet-quiet                          | Super quiet mode: the simulator does not log anything. Go cry somewhere else if something goes wrong and you have no clue what.                                                   |
-| -s,--serv \<Ignite note configuration file> | Start Ignite cluster node on local machine                                                                                                                                        |
-| -t,--end-time \<Time>                       | The simulation will be concluded at the specified time. Defaults to infinity.                                                                                                     |
-| -v,--verbose                               | Verbose mode: prints info-level informations. Slows the simulator down.                                                                                                           |
-| -var,--variable \<var1 var2 ... varN>       | Used with -b. If the specified variable exists in the Alchemist YAML file, it is added to the pool of  variables. Be wary: complexity quickly grows with the number of variables. |
-| -vv,--vverbose                             | Very verbose mode: prints debug-level informations. Slows the simulator down. A lot.                                                                                              |
-| -vvv,--vvverbose                           | Very very verbose mode: prints trace-level informations. Slows the simulator down. An awful lot.                                                                                  |
-| -y,--yaml \<file>                           | Load the specified Alchemist YAML file                                                                                                                                            |
+In order to re-run all the experiments, launch:
+```bash
+./gradlew runSimulationBatch
+```
+data will be generated into the `data` folder
+
+## Re-generating the charts from the paper
+
+If you are just willing to re-run the data analysis and generate all the charts in the paper (plus hundreds other),
+you can use the data we generated in the past:
+
+```bash
+pip install --upgrade pip --user
+pip install -r requirements.txt --user
+mkdir -p charts
+python process.py
+```
