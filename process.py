@@ -242,7 +242,7 @@ if __name__ == '__main__':
         return r'\|' + x + r'\|'
 
     labels = {
-        'commcost[Sum]': Measure(r'Total comm. cost $\sum_{j \in N_r}{M_j}$', r'$\frac{messages}{round}$'),
+        'commcost[Sum]': Measure(r'Total comm. cost $\sum_{j \in H}{M_j}$', r'$\frac{messages}{round}$'),
         'commcost[Mean]': Measure(r'Mean comm. cost $\overline{M}$', r'$\frac{messages}{round}$'),
         'rangeToVd': Measure(r'$\frac{R_v}{R}$'),
         'realDeviceCount': Measure(r'$N_r$', 'devices'),
