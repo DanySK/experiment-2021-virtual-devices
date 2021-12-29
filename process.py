@@ -445,6 +445,7 @@ if __name__ == '__main__':
                     ax.set_xlim(minTime, maxTime)
 #                    maxy = max(data[current_metric].values.flatten()) * 1.05
                     ax.set_ylim(0, None)
+                    ax.ticklabel_format(axis="both", style="sci", scilimits=(-3, 3), useMathText=True)
                     ax.legend(title = label_for(comparison_variable), ncol = 2)
                     fig.tight_layout()
                     by_time_output_directory = f'{output_directory}/rangeToVd/'
