@@ -25,7 +25,7 @@ gradlew.bat runSimulation
 ```
 
 Press <kb>P</kb> to start the simulation.
-For further information about the GUI, see the [graphical interface shortcuts](https://alchemistsimulator.github.io/wiki/usage/gui/).
+For further information about the GUI, see the [graphical interface shortcuts](https://alchemistsimulator.github.io/reference/default-ui/).
 
 Note that the first launch will be rather slow, since Gradle will download all the required files.
 They will get cached in the user's home folder (as per Gradle normal behavior).
